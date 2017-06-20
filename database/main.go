@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	common "torpedo_common"
+	common "github.com/tb0hdan/torpedo_common"
 )
 
 type MongoDB struct {

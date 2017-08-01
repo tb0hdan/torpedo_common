@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -43,15 +44,18 @@ func (cu *Utils) SetLogger(logger *log.Logger) {
 	return
 }
 
-func (cu *Utils) GetURLBytes(url string) (result []byte, err error) {
+func (cu *Utils) HTTPClient(req_type, url, content_type string, body *strings.Reader) (result []byte, err error) {
 	client := &http.Client{}
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", url, body)
 	if err != nil {
 		cu.logger.Fatalln(err)
 	}
 
 	req.Header.Set("User-Agent", User_Agent)
+	if content_type != "" {
+		req.Header.Set("Content-Type", content_type)
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -66,12 +70,37 @@ func (cu *Utils) GetURLBytes(url string) (result []byte, err error) {
 	return
 }
 
+func (cu *Utils) GetURLBytes(url string) (result []byte, err error) {
+	result, err = cu.HTTPClient("GET", url, "", nil)
+	return
+}
+
+func (cu *Utils) PostURLBytes(url, content_type string, body *strings.Reader) (result []byte, err error) {
+	result, err = cu.HTTPClient("POST", url, content_type, body)
+	return
+}
+
 func (cu *Utils) GetURLUnmarshal(url string, result interface{}) (err error) {
 	data, err := cu.GetURLBytes(url)
 	if err != nil {
 		return
 	}
 	err = json.Unmarshal(data, result)
+	return
+}
+
+func (cu *Utils) PostURLUnmarshal(url, content_type string, body *strings.Reader, result interface{}) (err error) {
+	data, err := cu.PostURLBytes(url, content_type, body)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(data, result)
+	return
+}
+
+func (cu *Utils) PostURLFormUnmarshal(url string, data url.Values, result interface{}) (err error) {
+	body := strings.NewReader(data.Encode())
+	err = cu.PostURLUnmarshal(url, "application/x-www-form-urlencoded", body, result)
 	return
 }
 

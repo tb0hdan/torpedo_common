@@ -47,7 +47,10 @@ func (cu *Utils) SetLogger(logger *log.Logger) {
 func (cu *Utils) HTTPClient(req_type, url, content_type string, body *strings.Reader) (result []byte, err error) {
 	client := &http.Client{}
 
-	req, err := http.NewRequest("GET", url, body)
+	if body == nil {
+		body = strings.NewReader("")
+	}
+	req, err := http.NewRequest(req_type, url, body)
 	if err != nil {
 		cu.logger.Fatalln(err)
 	}

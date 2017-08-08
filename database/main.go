@@ -3,14 +3,18 @@ package database
 import (
 	"log"
 
+	"strings"
+
+	"fmt"
+
+	common "github.com/tb0hdan/torpedo_common"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	common "github.com/tb0hdan/torpedo_common"
 )
 
 type MongoDB struct {
-	logger *log.Logger
-	Server   string
+	logger   *log.Logger
+	DBURI    string
 	Database string
 }
 
@@ -19,7 +23,7 @@ type TorpedoStats struct {
 }
 
 func (mdb *MongoDB) GetSession() (session *mgo.Session, err error) {
-	session, err = mgo.Dial(mdb.Server)
+	session, err = mgo.Dial(mdb.DBURI)
 	if err != nil {
 		mdb.logger.Panic(err)
 	}
@@ -37,7 +41,7 @@ func (mdb *MongoDB) GetCollection(collectionName string) (session *mgo.Session, 
 	return
 }
 
-func (mdb *MongoDB) GetUpdateTotalMessages(step int64) (count int64){
+func (mdb *MongoDB) GetUpdateTotalMessages(step int64) (count int64) {
 	session, collection, err := mdb.GetCollection("messagestats")
 	if err != nil {
 		mdb.logger.Printf("GetUpdateTotalMessages failed with: %+v\n", err)
@@ -56,7 +60,7 @@ func (mdb *MongoDB) GetUpdateTotalMessages(step int64) (count int64){
 	} else {
 		count = result.ProcessedMessagesTotal
 	}
-	result = TorpedoStats{ProcessedMessagesTotal:count + step}
+	result = TorpedoStats{ProcessedMessagesTotal: count + step}
 	err = collection.Update(bson.M{}, result)
 	if err != nil {
 		mdb.logger.Printf("Failed to update stats: %+v\n", err)
@@ -64,16 +68,34 @@ func (mdb *MongoDB) GetUpdateTotalMessages(step int64) (count int64){
 	return
 }
 
-func New(server, database string) (mongodb *MongoDB) {
+func New(db_uri, database string) (mongodb *MongoDB) {
+	var server string
 	cu := &common.Utils{}
-	if server == "" {
-		server = "localhost"
-	}
+	// Handle empty DB name
 	if database == "" {
 		database = "torpedobot"
 	}
-	mongodb = &MongoDB{Server: server,
+	//
+	if db_uri == "" {
+		server = "localhost"
+	} else if strings.HasPrefix(db_uri, "mongodb://") {
+		server = db_uri
+		// override DB name
+		creds := strings.Split(db_uri, "mongodb://")[1]
+		if len(strings.Split(creds, "/")) == 2 {
+			database = strings.Split(creds, "/")[1]
+			// non-empty db param (auth db)
+		} else if database != "" {
+			//
+			server += fmt.Sprintf("/%s", database)
+		}
+	} else {
+		// fallback to host and use database parameter
+		server = db_uri
+	}
+	mongodb = &MongoDB{DBURI: server,
 		Database: database}
 	mongodb.logger = cu.NewLog("MongoDB")
+	mongodb.logger.Printf("MongoDB connector: server `%s` - database `%s`", server, database)
 	return
 }

@@ -1,22 +1,21 @@
 package torpedo_common
 
 import (
+	"crypto/md5"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
+	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
-
-	"crypto/md5"
-	"crypto/sha1"
-	"crypto/sha256"
-	"crypto/sha512"
-	"io"
-
-	"encoding/json"
 
 	"github.com/nlopes/slack"
 	"gopkg.in/h2non/filetype.v1"
@@ -147,6 +146,31 @@ func (cu *Utils) DownloadToTmp(url string) (fname string, mimetype string, is_im
 	}
 	fname = tmpfile.Name()
 	mimetype, _, is_image, err = cu.GetMIMEType(fname)
+	return
+}
+
+func GetLimitPage(search_string string, limit_default, page_default int) (limit, page int) {
+	limit = limit_default
+	page = page_default
+	r := regexp.MustCompile(`((limit|page)\:\d+)`)
+	result := r.FindAllStringSubmatch(search_string, -1)
+	for _, group := range result {
+		split := strings.Split(group[0], ":")
+		switch split[0] {
+		case "limit":
+			i, err := strconv.Atoi(split[1])
+			if err == nil {
+				limit = i
+			}
+		case "page":
+			i, err := strconv.Atoi(split[1])
+			if err == nil {
+				page = i
+			}
+		default:
+			fmt.Println("Unknown!")
+		}
+	}
 	return
 }
 

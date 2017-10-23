@@ -34,3 +34,14 @@ func CalculateMessageRate(tdiff, msgcount int64) (result string) {
 	}
 	return
 }
+
+func IsInArray(str string, arr []string) (result bool) {
+	matches := 0
+	for _, element := range arr {
+		if str == element {
+			matches += 1
+		}
+	}
+	result = matches > 0
+	return
+}

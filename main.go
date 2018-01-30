@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"os"
@@ -34,7 +34,7 @@ func (cu *Utils) SetLoggerPrefix(prefix string) (logger *log.Logger) {
 }
 
 func (cu *Utils) NewLog(prefix string) (logger *log.Logger) {
-	logger = log.New(os.Stdout, fmt.Sprintf("%s: ", prefix), log.Lshortfile|log.LstdFlags)
+	logger = log.New() //os.Stdout, fmt.Sprintf("%s: ", prefix), log.Lshortfile|log.LstdFlags)
 	return
 }
 

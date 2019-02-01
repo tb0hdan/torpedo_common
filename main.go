@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,8 +16,10 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
+	"github.com/h2non/filetype"
 	"github.com/nlopes/slack"
-	"gopkg.in/h2non/filetype.v1"
 )
 
 const User_Agent = "Mozilla/5.0 (https://github.com/tb0hdan/torpedo; tb0hdan@gmail.com) Go-http-client/1.1"
